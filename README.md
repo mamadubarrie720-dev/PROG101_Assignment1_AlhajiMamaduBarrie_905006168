@@ -1,9 +1,12 @@
 # CleanSalone: Community Waste Reporting System (Design)
 
 **Course:** PROG101 Principles of Programming Logic and Design
+
 **Assignment:** Assignment 1, Designing Logical Solutions for Sierra Leone Community Challenges
+
 **Institution:** Limkokwing University of Creative Technology, Sierra Leone
-**Student:** STUDENT NAME (STUDENT ID)
+
+**Student:**  Alhaji Mamadu Barrie (905006168)
 
 ## Problem
 Uncollected waste builds up in streets, markets and drains in Sierra Leone, causing flooding and disease. Residents have no simple way to report it, and councils have no organised way to decide which sites to clean first.
