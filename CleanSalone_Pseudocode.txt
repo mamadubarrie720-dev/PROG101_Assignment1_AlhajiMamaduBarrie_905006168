@@ -1,0 +1,157 @@
+START CleanSalone
+
+    CONSTANT MAX_SEVERITY = 3
+    CONSTANT LATE_DAYS = 7
+    CONSTANT HIGH_SCORE = 7
+    CONSTANT MEDIUM_SCORE = 4
+
+    DECLARE reports AS EMPTY LIST
+    DECLARE reportID AS Integer = 0
+    DECLARE running AS Boolean = TRUE
+    DECLARE choice AS Integer
+
+    WHILE running = TRUE
+        CALL DisplayMenu()
+        INPUT choice
+
+        IF choice = 1 THEN
+            CALL SubmitReport()
+        ELSE IF choice = 2 THEN
+            CALL ViewStatus()
+        ELSE IF choice = 3 THEN
+            CALL UpdateStatus()
+        ELSE IF choice = 4 THEN
+            SET running = FALSE
+        ELSE
+            DISPLAY "Invalid choice"
+        END IF
+    END WHILE
+
+    DISPLAY "Thank you for keeping Sierra Leone clean"
+
+END CleanSalone
+
+
+FUNCTION DisplayMenu()
+    DISPLAY "===== CLEANSALONE ====="
+    DISPLAY "1. Submit a report"
+    DISPLAY "2. View report status"
+    DISPLAY "3. Update report status (Administrator)"
+    DISPLAY "4. Exit"
+    DISPLAY "Enter your choice: "
+END FUNCTION
+
+
+FUNCTION SubmitReport()
+    DECLARE location, wasteType AS String
+    DECLARE severity, daysUncollected, score AS Integer
+    DECLARE nearDrain, isHazardous AS Boolean
+    DECLARE priority AS String
+
+    INPUT location, wasteType, severity, daysUncollected, nearDrain
+
+    WHILE ValidateReport(location, severity, daysUncollected) = FALSE
+        DISPLAY "Invalid data, try again"
+        INPUT location, severity, daysUncollected
+    END WHILE
+
+    IF wasteType = "Medical" OR wasteType = "Chemical" THEN
+        SET isHazardous = TRUE
+    ELSE
+        SET isHazardous = FALSE
+    END IF
+
+    SET score = CalculateScore(severity, isHazardous, daysUncollected, nearDrain)
+    SET priority = GetPriority(score)
+
+    SET reportID = reportID + 1
+    ADD (reportID, location, wasteType, priority, "Pending") TO reports
+
+    DISPLAY "Report ID: ", reportID
+    DISPLAY "Priority: ", priority
+    DISPLAY "Status: Pending"
+END FUNCTION
+
+
+FUNCTION ValidateReport(loc, sev, days) RETURNS Boolean
+    IF loc <> "" AND (sev >= 1 AND sev <= MAX_SEVERITY) AND days >= 0 THEN
+        RETURN TRUE
+    ELSE
+        RETURN FALSE
+    END IF
+END FUNCTION
+
+
+FUNCTION CalculateScore(sev, hazard, days, drain) RETURNS Integer
+    DECLARE s AS Integer
+    SET s = sev
+
+    IF hazard = TRUE THEN
+        SET s = s + 3
+    END IF
+
+    IF days > LATE_DAYS THEN
+        SET s = s + 2
+    END IF
+
+    IF drain = TRUE THEN
+        SET s = s + 2
+    END IF
+
+    RETURN s
+END FUNCTION
+
+
+FUNCTION GetPriority(s) RETURNS String
+    IF s >= HIGH_SCORE THEN
+        RETURN "High"
+    ELSE IF s >= MEDIUM_SCORE THEN
+        RETURN "Medium"
+    ELSE
+        RETURN "Low"
+    END IF
+END FUNCTION
+
+
+FUNCTION ViewStatus()
+    DECLARE searchID AS Integer
+    DECLARE found AS Boolean = FALSE
+
+    INPUT searchID
+
+    FOR EACH report IN reports
+        IF report.ID = searchID THEN
+            DISPLAY report.ID, report.location, report.priority, report.status
+            SET found = TRUE
+        END IF
+    END FOR
+
+    IF found = FALSE THEN
+        DISPLAY "Report not found"
+    END IF
+END FUNCTION
+
+
+FUNCTION UpdateStatus()
+    DECLARE searchID AS Integer
+    DECLARE newStatus AS String
+    DECLARE found AS Boolean = FALSE
+
+    INPUT searchID, newStatus
+
+    FOR EACH report IN reports
+        IF report.ID = searchID THEN
+            SET found = TRUE
+            IF newStatus = "Pending" OR newStatus = "Assigned" OR newStatus = "Collected" THEN
+                SET report.status = newStatus
+                DISPLAY "Updated"
+            ELSE
+                DISPLAY "Invalid status"
+            END IF
+        END IF
+    END FOR
+
+    IF found = FALSE THEN
+        DISPLAY "Report not found"
+    END IF
+END FUNCTION
